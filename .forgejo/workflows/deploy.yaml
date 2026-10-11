@@ -1,0 +1,159 @@
+name: Build and Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Same job as in test.yaml (which covers non-main branches); duplicated here
+  # so a red suite blocks the build+deploy — Forgejo has no cross-workflow needs.
+  test:
+    runs-on: nix-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: bingo_test
+    steps:
+      - name: Prepare container for actions
+        run: |
+          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+          # node for JS actions (checkout); git-minimal is already in the image
+          nix-env -iA nixpkgs.nodejs_22
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache gems
+        uses: actions/cache@v4
+        with:
+          path: .gems
+          key: gems-${{ hashFiles('Gemfile.lock') }}
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            nix develop -c pg_isready -h postgres -U postgres && exit 0
+            sleep 2
+          done
+          echo "Postgres service never became ready" >&2
+          exit 1
+
+      - name: Run test suite
+        env:
+          TEST_DATABASE_URL: postgres://postgres@postgres:5432/bingo_test
+        run: nix develop -c bundle exec rake test
+
+  build:
+    runs-on: arch-latest
+    needs: test
+    container:
+      image: gcr.io/kaniko-project/executor:debug
+    outputs:
+      image_tag: ${{ steps.build_image.outputs.image_tag }}
+    steps:
+      - name: Build and push Docker Image using Kaniko
+        id: build_image
+        run: |
+          # Tags
+          SHORT_SHA=${GITHUB_SHA::8}
+          IMAGE_BASE=${{ secrets.FJ_REGISTRY }}/${{ secrets.FJ_USER }}/datacenterbingo
+          IMAGE_TAG=${IMAGE_BASE}:${SHORT_SHA}
+          IMAGE_LATEST=${IMAGE_BASE}:latest
+
+          # Auth Conf
+          mkdir -p /kaniko/.docker
+          echo "{\"auths\":{\"${{ secrets.FJ_REGISTRY }}\":{\"auth\":\"$(echo -n ${{ secrets.FJ_USER }}:${{ secrets.FJ_TOKEN }} | base64)\"}}}" > /kaniko/.docker/config.json
+
+          # Build & push
+          /kaniko/executor \
+            --context=git://${{ secrets.FJ_REGISTRY }}/${{ github.repository }}.git \
+            --git=branch=${{ github.ref_name }} \
+            --destination=$IMAGE_TAG \
+            --destination=$IMAGE_LATEST
+
+          # Output the specific tag for deployment
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+  deploy:
+    runs-on: arch-latest
+    needs: build
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm nodejs openssh rsync
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy docker-compose.yml
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.DEPLOY_IP }}
+          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
+          SOURCE: "docker-compose.yml"
+          TARGET: "/opt/datacenterbingo/"
+
+      # Read-only DB role and MinIO user (see CLAUDE.md); the asxp.io admin
+      # owns writes. BINGO_HOST also feeds the Traefik rule via compose.
+      - name: Deploy .env from secrets
+        uses: appleboy/ssh-action@v1.2.3
+        env:
+          BINGO_DB_PASSWORD: ${{ secrets.BINGO_DB_PASSWORD }}
+          BINGO_S3_ACCESS_KEY: ${{ secrets.BINGO_S3_ACCESS_KEY }}
+          BINGO_S3_SECRET_KEY: ${{ secrets.BINGO_S3_SECRET_KEY }}
+          INDEXNOW: ${{ secrets.INDEXNOW }}
+        with:
+          host: ${{ secrets.DEPLOY_IP }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: BINGO_DB_PASSWORD,BINGO_S3_ACCESS_KEY,BINGO_S3_SECRET_KEY,INDEXNOW
+          script_stop: true
+          script: |
+            umask 077
+            mkdir -p /opt/datacenterbingo
+            cat > /opt/datacenterbingo/.env <<EOF
+            RACK_ENV=production
+            BINGO_HOST=datacenterbingo.xyz
+            DATABASE_URL=postgres://bingo:${BINGO_DB_PASSWORD}@postgres:5432/asxpio
+            S3_ENDPOINT=http://minio:9000
+            S3_REGION=us-east-1
+            S3_BUCKET=asxpio-invoices
+            S3_ACCESS_KEY=${BINGO_S3_ACCESS_KEY}
+            S3_SECRET_KEY=${BINGO_S3_SECRET_KEY}
+            INDEXNOW_KEY=${INDEXNOW}
+            EOF
+            chmod 600 /opt/datacenterbingo/.env
+
+      - name: Deploy and update container
+        uses: appleboy/ssh-action@v1.2.3
+        env:
+          NEW_IMAGE: ${{ needs.build.outputs.image_tag }}
+        with:
+          host: ${{ secrets.DEPLOY_IP }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: NEW_IMAGE
+          script: |
+            cd /opt/datacenterbingo
+
+            sed -i "s|image:.*|image: $NEW_IMAGE|" docker-compose.yml
+
+            docker pull $NEW_IMAGE
+            docker compose up -d
+
+            for i in $(seq 1 18); do
+              status=$(docker inspect --format '{{.State.Health.Status}}' datacenterbingo 2>/dev/null || echo missing)
+              if [ "$status" = "healthy" ]; then
+                echo "Deployment successful!"
+                exit 0
+              fi
+              sleep 5
+            done
+            echo "datacenterbingo never became healthy (last status: $status)" >&2
+            docker logs --tail 50 datacenterbingo
+            exit 1

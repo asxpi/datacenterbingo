@@ -1,0 +1,27 @@
+source 'https://rubygems.org'
+ruby '>= 3.1'
+
+gem 'sinatra',         '~> 4.2'
+gem 'puma',            '~> 6.6'
+gem 'rack',            '~> 3.2'
+gem 'rack-protection', '~> 4.2'
+gem 'rackup',          '~> 2.3'
+gem 'erubi',           '~> 1.13'
+gem 'dotenv',          '~> 3.1'
+
+gem 'pg',              '~> 1.5'
+gem 'sequel',          '~> 5.86'
+gem 'aws-sdk-s3',      '~> 1.170'
+# aws-sdk-core needs an XML parser; rexml stopped being a default gem in
+# Ruby 3.4, so it must be declared or S3 calls raise at first use.
+gem 'rexml',           '~> 3.4'
+
+group :development do
+  gem 'rerun', '~> 0.14'
+end
+
+group :test do
+  gem 'minitest',  '~> 5.25'
+  gem 'rack-test', '~> 2.2'
+  gem 'rake',      '~> 13.2'
+end

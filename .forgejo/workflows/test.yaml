@@ -1,0 +1,56 @@
+name: Tests
+
+# main is covered by the test job inside deploy.yaml (which gates the build);
+# this workflow covers every other branch.
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  test:
+    runs-on: nix-latest
+    services:
+      # CI stand-in for bin/test's ephemeral Postgres: the nix container runs
+      # as root and initdb refuses to run as root, so the DB lives in a
+      # service container instead and the suite connects via TEST_DATABASE_URL.
+      # Job and service share the per-workflow bridge network (the runner's
+      # container.network must stay "" — with "host" the service network is
+      # never created and services fail to start).
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: bingo_test
+    steps:
+      - name: Prepare container for actions
+        run: |
+          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+          # node for JS actions (checkout); git-minimal is already in the image
+          nix-env -iA nixpkgs.nodejs_22
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The nix closure persists in the runner's nix-store volume; gems live
+      # in the workspace (.gems via the flake's BUNDLE_PATH), so cache those.
+      - name: Cache gems
+        uses: actions/cache@v4
+        with:
+          path: .gems
+          key: gems-${{ hashFiles('Gemfile.lock') }}
+
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            nix develop -c pg_isready -h postgres -U postgres && exit 0
+            sleep 2
+          done
+          echo "Postgres service never became ready" >&2
+          exit 1
+
+      - name: Run test suite
+        env:
+          TEST_DATABASE_URL: postgres://postgres@postgres:5432/bingo_test
+        run: nix develop -c bundle exec rake test

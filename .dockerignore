@@ -1,0 +1,15 @@
+.env
+.gems
+.bundle
+vendor/bundle
+*.log
+tmp
+flake.nix
+flake.lock
+CLAUDE.md
+README.md
+test
+Rakefile
+bin
+.forgejo
+.git

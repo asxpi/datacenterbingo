@@ -1,0 +1,27 @@
+services:
+  bingo:
+    # Image is set by the deploy workflow (registry/user/datacenterbingo:sha).
+    build: .
+    image: datacenterbingo:latest
+    container_name: datacenterbingo
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - traefik
+      - storage # postgres + minio
+    labels:
+      - "traefik.enable=true"
+      # Priority beats the old asxpio-bingo router while both exist.
+      - "traefik.http.routers.datacenterbingo.rule=Host(`${BINGO_HOST}`) || Host(`www.${BINGO_HOST}`)"
+      - "traefik.http.routers.datacenterbingo.priority=1000"
+      - "traefik.http.routers.datacenterbingo.entrypoints=websecure"
+      - "traefik.http.routers.datacenterbingo.tls=true"
+      - "traefik.http.routers.datacenterbingo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.datacenterbingo.service=datacenterbingo"
+      - "traefik.http.services.datacenterbingo.loadbalancer.server.port=3000"
+
+networks:
+  traefik:
+    external: true
+  storage:
+    external: true
