@@ -9,8 +9,8 @@ deploy); `github.com/asxpi/datacenterbingo` is a push mirror.
 
 Content is edited in the asxp.io admin (`/admin/bingo`, repo `asxpio`:
 `lib/bingo.rb`, `lib/bingo_admin.rb`). Both apps use the same Postgres tables
-(`bingo_datacenters`, `bingo_incidents`) and the photos under `bingo/` in
-asxpio's MinIO bucket.
+(`bingo_datacenters`, `bingo_incidents`) and the photos under `bingo/` in the
+`datacenterbingo-photos` bucket (asxpio's admin uploads them there).
 
 - **asxpio owns the schema.** Migrations live there. After it adds a
   bingo migration, refresh `test/schema.sql` (instructions in its header)
@@ -21,7 +21,7 @@ asxpio's MinIO bucket.
   seeding, `guess_provider`) stays in asxpio. Keep shared parts in step:
   `PROVIDERS`, `Board`, and model methods.
 - Prod uses a read-only DB role `bingo` (SELECT on the two tables) and a
-  MinIO user limited to `s3:GetObject` on `asxpio-invoices/bingo/*`. Both
+  MinIO user limited to `s3:GetObject` on `datacenterbingo-photos`. Both
   are provisioned by the `storage` repo (`init/`), from the same
   `BINGO_*` secrets set on both repos.
 
