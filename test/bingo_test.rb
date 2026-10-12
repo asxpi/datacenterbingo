@@ -333,6 +333,15 @@ class BingoTest < Minitest::Test
     refute_includes last_response.body, 'Second.' # no fallback across languages
   end
 
+  def test_footer_links_to_source
+    { 'ru' => 'Исходный код на GitHub', 'en' => 'Source code on GitHub', 'uk' => 'Вихідний код на GitHub' }.each do |l, text|
+      get "/#{l}"
+      assert_includes last_response.body, %(<a href="https://github.com/asxpi/datacenterbingo" rel="noopener">#{text}</a>)
+    end
+    get '/en/dc/dc-1'
+    assert_includes last_response.body, 'github.com/asxpi/datacenterbingo'
+  end
+
   def test_static_files_not_served
     get '/style.css'
     assert_equal 404, last_response.status

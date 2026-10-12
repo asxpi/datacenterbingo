@@ -84,11 +84,7 @@
     </ul>
   </section>
 
-  <footer>
-    <p><%= t(:footer) %></p>
-    <%== erb :_credits, layout: false %>
-    <p>© <%= Date.today.year %> <a href="https://asxp.io">asxp.io</a></p>
-  </footer>
+  <%== erb :_footer, layout: false %>
 </main>
 
 <% b.cells.each do |dc| %>

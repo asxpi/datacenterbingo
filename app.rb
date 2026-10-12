@@ -25,6 +25,7 @@ end
 # Content is managed from asxp.io/admin/bingo (asxpio repo), which shares the
 # database and photo bucket.
 class BingoWeb < Sinatra::Base
+  SOURCE_URL = 'https://github.com/asxpi/datacenterbingo'.freeze
   HOSTS = [ENV['BINGO_HOST'], ENV['BINGO_ALT_HOST']].compact.reject(&:empty?).freeze
 
   configure do
