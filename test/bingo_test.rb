@@ -342,6 +342,78 @@ class BingoTest < Minitest::Test
     assert_includes last_response.body, 'github.com/asxpi/datacenterbingo'
   end
 
+  def test_rss_feed
+    old = hit!(1, kind: 'fire')
+    old.update(occurred_on: Date.new(2026, 1, 2), url: 'https://example.com/fire?a=1&b=2')
+    hit!(3, kind: 'strike')
+    get '/en/feed.xml'
+    assert last_response.ok?
+    assert_equal 'application/rss+xml;charset=utf-8', last_response.content_type
+    require 'rexml/document'
+    doc = REXML::Document.new(last_response.body)
+    assert_equal 'Datacenter Bingo — Incident log', doc.elements['rss/channel/title'].text
+    items = doc.get_elements('rss/channel/item')
+    assert_equal 2, items.size
+    assert_equal 'Drone strike: ЦОД 4 — Авария 3', items[0].elements['title'].text # newest first, ru fallback
+    assert_equal 'https://example.org/en/dc/dc-2', items[1].elements['link'].text
+    assert_equal "tag:example.org,2026:incident-#{old.id}", items[1].elements['guid'].text
+    assert_equal 'Fri, 02 Jan 2026 00:00:00 -0000', items[1].elements['pubDate'].text
+    assert_includes items[1].elements['description'].text, '<a href="https://example.com/fire?a=1&amp;b=2">Source</a>'
+    get '/uk/feed.xml'
+    assert_includes last_response.body, '<title>Бінго ЦОДів — Журнал інцидентів</title>'
+    get '/xx/feed.xml'
+    assert_equal 404, last_response.status
+  end
+
+  def test_json_feed
+    hit!(0, kind: 'outage').update(url: 'https://example.com/n')
+    @dcs[0].update(provider: 'yandex', photo_key: 'bingo/dc-1-0123abcd.jpg', photo_variants: true)
+    get '/ru/feed.json'
+    assert last_response.ok?
+    assert_equal 'application/feed+json;charset=utf-8', last_response.content_type
+    assert_equal '*', last_response.headers['access-control-allow-origin']
+    feed = JSON.parse(last_response.body)
+    assert_equal 'https://jsonfeed.org/version/1.1', feed['version']
+    assert_equal 'https://example.org/ru/feed.json', feed['feed_url']
+    item = feed['items'].fetch(0)
+    assert_equal 'Отключение: ЦОД 1 — Авария 0', item['title']
+    assert_equal 'https://example.org/ru/dc/dc-1', item['url']
+    assert_equal 'https://example.com/n', item['external_url']
+    assert_equal 'https://example.org/p/dc-1-0123abcd-1200.webp', item['image']
+    assert_equal %w[Отключение Яндекс], item['tags']
+    assert_equal "#{Date.today.iso8601}T00:00:00Z", item['date_published']
+  end
+
+  def test_open_dataset
+    hit!(4, kind: 'fire').update(url: 'https://example.com/f', title_en: 'Fire')
+    @dcs[4].update(mw: '25–30', mw_type: 'it', provider: 'rtk')
+    get '/data.json'
+    assert last_response.ok?
+    assert_equal '*', last_response.headers['access-control-allow-origin']
+    data = JSON.parse(last_response.body)
+    assert_equal 'CC-BY-4.0', data['license']
+    assert_includes data['attribution'], 'Cat Eyes OSINT'
+    assert_equal 25, data['datacenters'].size
+    dc = data['datacenters'].find { |d| d['slug'] == 'dc-5' }
+    assert_equal 5, dc['rank']
+    assert_equal 30.0, dc['mw_value']
+    assert_equal({ 'ru' => 'ЦОД 5', 'en' => 'ЦОД 5', 'uk' => 'ЦОД 5' }, dc['name'])
+    assert_equal 'https://example.org/uk/dc/dc-5', dc['pages']['uk']
+    assert_equal [{ 'date' => Date.today.iso8601, 'kind' => 'fire',
+                    'title' => { 'ru' => 'Авария 4', 'en' => 'Fire', 'uk' => 'Аварія 4' },
+                    'source_url' => 'https://example.com/f' }], dc['incidents']
+  end
+
+  def test_pages_link_the_feeds
+    get '/en'
+    body = last_response.body
+    assert_includes body, '<link rel="alternate" type="application/rss+xml" title="Datacenter Bingo — Incident log" href="https://example.org/en/feed.xml">'
+    assert_includes body, 'type="application/feed+json"'
+    assert_includes body, '<a href="/en/feed.xml">RSS</a> · <a href="/en/feed.json">JSON Feed</a> · <a href="/data.json">Open data (CC BY 4.0)</a>'
+    get '/ru/dc/dc-1'
+    assert_includes last_response.body, 'href="https://example.org/ru/feed.xml"'
+  end
+
   def test_static_files_not_served
     get '/style.css'
     assert_equal 404, last_response.status

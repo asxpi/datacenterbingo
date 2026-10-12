@@ -31,6 +31,15 @@ Content is edited in the asxp.io admin (`/admin/bingo`, repo `asxpio`:
   (card; `?view=all`, `?p[]=provider`), `/:locale/dc/:slug`, `/sitemap.xml`,
   `/robots.txt`, `/p/:file` (photo proxy, immutable), `/<indexnow-key>.txt`,
   icons, `/healthz`.
+- Feeds: `/:locale/feed.xml` (RSS 2.0) and `/:locale/feed.json` (JSON Feed
+  1.1), the latest 50 incidents, newest first. Item IDs are
+  `tag:<host>,2026:incident-<id>`, so they stay stable when an incident is
+  edited. Pages advertise both via `<link rel="alternate">` and in the
+  footer.
+- `/data.json`: every datacenter with names in all locales, specs, pages,
+  photo credit and incidents with sources. Licensed CC BY 4.0, with the
+  attribution inside the file. Feeds and dataset send
+  `Access-Control-Allow-Origin: *`.
 - `config.ru`: `www.` → `BINGO_HOST` 301.
 - `views/`: `layout.erb` (CSS and SEO head), `index.erb` (card, provider
   filter, dialogs), `dc.erb`, partials. `assets/`: icons.

@@ -13,4 +13,13 @@ of Claude (Anthropic). Part of the list came from the
 [hackyourmom datacenter map](https://hackyourmom.com/en/karta-data-czentriv-na-rasii/)
 (data by Cat Eyes OSINT), and each entry was re-verified.
 
+## Data
+
+- **Incident feeds:** `/en/feed.xml` (RSS) and `/en/feed.json` (JSON Feed).
+  Swap `en` for `ru` or `uk`.
+- **Full dataset:** [`/data.json`](https://datacenterbingo.xyz/data.json),
+  licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Credit "Datacenter Bingo (datacenterbingo.xyz)"; the full attribution
+  line is in the file.
+
 Development: `nix develop`, then `bin/test`. See `CLAUDE.md`.

@@ -29,6 +29,11 @@ module Bingo
 
   def self.provider_name(slug, locale) = PROVIDERS.dig(slug, locale) || slug
 
+  # "64" → 64.0, "25–30" → 30.0, ">40" → 40.0, "13,7" → 13.7, "" → nil
+  def self.mw_value(mw)
+    mw.to_s.tr(',', '.').scan(/\d+(?:\.\d+)?/).map(&:to_f).max
+  end
+
   # Every row, column and both diagonals, as 0-based cell indices.
   LINES = (
     (0...SIZE).map { |r| (0...SIZE).map { |c| r * SIZE + c } } +
@@ -54,6 +59,7 @@ module Bingo
       credits_ai: 'Информация собрана и проверена с помощью Claude (Anthropic).',
       credits_hym: 'Спасибо %{link} (данные Cat Eyes OSINT) за часть списка: каждая запись перепроверена по сайтам операторов и прессе.',
       source_code: 'Исходный код на GitHub',
+      feed_title: '%{site} — Журнал инцидентов', open_data: 'Открытые данные (CC BY 4.0)',
       footer: 'Данные из открытых источников (2025–2026). Клетка зачёркивается только по публичному источнику.',
       kinds: { 'strike' => 'Атака БПЛА', 'fire' => 'Пожар', 'outage' => 'Отключение', 'flood' => 'Затопление', 'cooling' => 'Перегрев', 'other' => 'Инцидент' },
       letters: %w[Б И Н Г О],
@@ -85,6 +91,7 @@ module Bingo
       credits_ai: 'Information collected and verified with the help of Claude (Anthropic).',
       credits_hym: 'Thanks to %{link} (data by Cat Eyes OSINT) for part of the list; every entry was re-verified against operator sites and the press.',
       source_code: 'Source code on GitHub',
+      feed_title: '%{site} — Incident log', open_data: 'Open data (CC BY 4.0)',
       footer: 'Open-source data (2025–2026). A cell is crossed out only with a public source.',
       kinds: { 'strike' => 'Drone strike', 'fire' => 'Fire', 'outage' => 'Outage', 'flood' => 'Flood', 'cooling' => 'Overheating', 'other' => 'Incident' },
       letters: %w[B I N G O],
@@ -116,6 +123,7 @@ module Bingo
       credits_ai: 'Інформацію зібрано й перевірено за допомогою Claude (Anthropic).',
       credits_hym: 'Дякуємо %{link} (дані Cat Eyes OSINT) за частину списку: кожен запис перевірено за сайтами операторів і пресою.',
       source_code: 'Вихідний код на GitHub',
+      feed_title: '%{site} — Журнал інцидентів', open_data: 'Відкриті дані (CC BY 4.0)',
       footer: 'Дані з відкритих джерел (2025–2026). Клітинка закреслюється лише за публічним джерелом.',
       kinds: { 'strike' => 'Атака БПЛА', 'fire' => 'Пожежа', 'outage' => 'Відключення', 'flood' => 'Затоплення', 'cooling' => 'Перегрів', 'other' => 'Інцидент' },
       letters: %w[Б І Н Г О],

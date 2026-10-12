@@ -26,6 +26,8 @@ end
 # database and photo bucket.
 class BingoWeb < Sinatra::Base
   SOURCE_URL = 'https://github.com/asxpi/datacenterbingo'.freeze
+  LICENSE_URL = 'https://creativecommons.org/licenses/by/4.0/'.freeze
+  FEED_SIZE = 50
   HOSTS = [ENV['BINGO_HOST'], ENV['BINGO_ALT_HOST']].compact.reject(&:empty?).freeze
 
   configure do
@@ -157,6 +159,28 @@ class BingoWeb < Sinatra::Base
       { 'building' => t(:building), 'planned' => t(:planned) }[dc.status]
     end
 
+    # Stable per incident across edits, so readers don't show duplicates.
+    def incident_id(i) = "tag:#{ENV.fetch('BINGO_HOST', request.host)},2026:incident-#{i.id}"
+
+    # Feed entry body: what happened, the datacenter facts, the source.
+    def incident_html(i)
+      h = Rack::Utils.method(:escape_html)
+      parts = ["<p>#{h.(i.l(:title, @locale))}</p>", "<p>#{h.(dc_facts(i.datacenter).join(' '))}</p>"]
+      parts << %(<p><a href="#{h.(i.url)}">#{h.(t(:source))}</a></p>) if i.url
+      parts.join
+    end
+
+    def incident_headline(i)
+      "#{kind_label(i.kind)}: #{i.datacenter.l(:name, @locale)} — #{i.l(:title, @locale)}"
+    end
+
+    def feed_incidents
+      Bingo::Incident.order(Sequel.desc(:occurred_on), Sequel.desc(:id)).limit(FEED_SIZE)
+                     .eager(datacenter: :incidents).all
+    end
+
+    def feed_time(i) = Time.utc(i.occurred_on.year, i.occurred_on.month, i.occurred_on.day)
+
     def preferred_locale
       langs = request.env['HTTP_ACCEPT_LANGUAGE'].to_s.downcase.scan(/([a-z]{2})(?:-[a-z]+)?(?:;q=([\d.]+))?/)
       langs.sort_by { |_, q| -(q || '1').to_f }.map(&:first).find { |l| Bingo::LOCALES.include?(l) } || 'en'
@@ -230,6 +254,72 @@ class BingoWeb < Sinatra::Base
     @ld = dc_json_ld(@dc)
     cache_control :public, max_age: 60
     erb :dc
+  end
+
+  # Incident feeds per locale: RSS 2.0 and JSON Feed 1.1, newest first.
+  get %r{/(ru|en|uk)/feed\.xml} do |locale|
+    @locale = locale
+    @incidents = feed_incidents
+    content_type 'application/rss+xml', charset: 'utf-8'
+    cache_control :public, max_age: 300
+    erb :feed_rss, layout: false
+  end
+
+  get %r{/(ru|en|uk)/feed\.json} do |locale|
+    @locale = locale
+    content_type 'application/feed+json', charset: 'utf-8'
+    headers 'Access-Control-Allow-Origin' => '*'
+    cache_control :public, max_age: 300
+    JSON.pretty_generate(
+      version: 'https://jsonfeed.org/version/1.1',
+      title: format(t(:feed_title), site: t(:title)),
+      description: t(:tagline),
+      home_page_url: "#{base_url}/#{locale}",
+      feed_url: "#{base_url}/#{locale}/feed.json",
+      language: locale,
+      icon: "#{base_url}/apple-touch-icon.png",
+      favicon: "#{base_url}/favicon.ico",
+      authors: [{ name: 'asxpi', url: 'https://asxp.io' }],
+      items: feed_incidents.map do |i|
+        dc = i.datacenter
+        { id: incident_id(i), url: "#{base_url}#{dc_path(dc)}", external_url: i.url,
+          title: incident_headline(i), content_html: incident_html(i),
+          image: (dc.photo_key && "#{base_url}#{photo_path(dc, 1200)}"),
+          date_published: feed_time(i).iso8601, date_modified: i.updated_at&.utc&.iso8601,
+          tags: [kind_label(i.kind), Bingo.provider_name(dc.provider, locale)].compact.uniq }.compact
+      end
+    )
+  end
+
+  # The whole dataset, every language, for reuse under CC BY 4.0.
+  get '/data.json' do
+    content_type 'application/json', charset: 'utf-8'
+    headers 'Access-Control-Allow-Origin' => '*'
+    cache_control :public, max_age: 300
+    loc = ->(row, field) { Bingo::LOCALES.to_h { |l| [l, row.l(field, l)] } }
+    dcs = Bingo::Datacenter.order(:position, :id).eager(:incidents).all
+    JSON.pretty_generate(
+      title: 'Datacenter Bingo dataset',
+      description: "Russia's largest datacenters with publicly sourced incidents (strikes, fires, outages).",
+      home_page_url: "#{base_url}/",
+      license: 'CC-BY-4.0',
+      license_url: LICENSE_URL,
+      attribution: "Datacenter Bingo (#{base_url}/), collected and verified with the help of Claude (Anthropic); " \
+                   'part of the list from the hackyourmom datacenter map (data by Cat Eyes OSINT), re-verified.',
+      updated_at: Bingo::Board.load.updated_on&.utc&.iso8601,
+      datacenters: dcs.map do |dc|
+        { slug: dc.slug, rank: dc.position, name: loc.(dc, :name), city: loc.(dc, :city),
+          operator: dc.operator, provider: dc.provider, status: dc.status,
+          mw: dc.mw, mw_value: Bingo.mw_value(dc.mw), mw_type: dc.mw_type, year: dc.year,
+          info_url: dc.info_url,
+          pages: Bingo::LOCALES.to_h { |l| [l, "#{base_url}#{dc_path(dc, l)}"] },
+          photo: dc.photo_key && { url: "#{base_url}#{photo_path(dc, 1200)}", credit: dc.photo_credit,
+                                   source_url: dc.photo_source_url },
+          incidents: dc.incidents.map do |i|
+            { date: i.occurred_on.iso8601, kind: i.kind, title: loc.(i, :title), source_url: i.url }
+          end }
+      end
+    )
   end
 
   # IndexNow key file: proves to the engines that pings come from us.

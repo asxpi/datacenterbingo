@@ -17,6 +17,8 @@
 <link rel="alternate" hreflang="x-default" href="<%= base %><%= @x_default %>">
 <% end %>
 <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+<link rel="alternate" type="application/rss+xml" title="<%= format(t(:feed_title), site: t(:title)) %>" href="<%= base %>/<%= @locale %>/feed.xml">
+<link rel="alternate" type="application/feed+json" title="<%= format(t(:feed_title), site: t(:title)) %>" href="<%= base %>/<%= @locale %>/feed.json">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="<%= t(:title) %>">
 <meta property="og:title" content="<%= @title %>">

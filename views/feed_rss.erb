@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<% base = base_url %>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title><%= format(t(:feed_title), site: t(:title)) %></title>
+    <link><%= base %>/<%= @locale %></link>
+    <description><%= t(:tagline) %></description>
+    <language><%= @locale %></language>
+    <atom:link href="<%= base %>/<%= @locale %>/feed.xml" rel="self" type="application/rss+xml"/>
+    <% if (top = @incidents.first) %>
+    <lastBuildDate><%= [*@incidents.map(&:updated_at).compact, feed_time(top)].max.utc.rfc2822 %></lastBuildDate>
+    <% end %>
+    <% @incidents.each do |i| %>
+    <item>
+      <title><%= incident_headline(i) %></title>
+      <link><%= base %><%= dc_path(i.datacenter) %></link>
+      <guid isPermaLink="false"><%= incident_id(i) %></guid>
+      <pubDate><%= feed_time(i).rfc2822 %></pubDate>
+      <category><%= kind_label(i.kind) %></category>
+      <description><%= incident_html(i) %></description>
+    </item>
+    <% end %>
+  </channel>
+</rss>
