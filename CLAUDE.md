@@ -25,6 +25,12 @@ Content is edited in the asxp.io admin (`/admin/bingo`, repo `asxpio`:
   are provisioned by the `storage` repo (`init/`), from the same
   `BINGO_*` secrets set on both repos.
 
+## Research
+
+Before adding or changing datacenters, incidents or photos, follow
+`OSINT.md`. It covers sources, verification, photo rules (no people, and
+renderings only for unbuilt sites) and credit format.
+
 ## Layout
 
 - `app.rb`: `BingoWeb`. Routes: `/` (redirect by Accept-Language), `/ru|en|uk`
