@@ -181,6 +181,24 @@ class BingoWeb < Sinatra::Base
 
     def feed_time(i) = Time.utc(i.occurred_on.year, i.occurred_on.month, i.occurred_on.day)
 
+    # Bar colour for an answered share (nil = no data).
+    def avail_class(a)
+      return '' if a.nil?
+      a >= 0.8 ? 'up' : (a.zero? ? 'down' : 'degraded')
+    end
+
+    def status_report(only: nil) = Bingo::Status.available? ? Bingo::Status.load(only: only) : nil
+
+    def status_json(report)
+      { checked_at: report&.checked_at&.utc&.iso8601, monitor: report&.state,
+        controls: report&.controls && { ok: report.controls[0], checked: report.controls[1] },
+        datacenters: (report&.sites || []).map do |s|
+          { slug: s.dc.slug, rank: s.dc.position, state: s.state, availability: s.availability&.round(3),
+            rtt_ms: s.rtt_ms, targets: s.targets, hourly: s.history.map { |a| a&.round(3) } }
+        end,
+        unmonitored: (report&.unmonitored || []).map(&:slug) }
+    end
+
     def preferred_locale
       langs = request.env['HTTP_ACCEPT_LANGUAGE'].to_s.downcase.scan(/([a-z]{2})(?:-[a-z]+)?(?:;q=([\d.]+))?/)
       langs.sort_by { |_, q| -(q || '1').to_f }.map(&:first).find { |l| Bingo::LOCALES.include?(l) } || 'en'
@@ -252,8 +270,27 @@ class BingoWeb < Sinatra::Base
     @path_for = ->(l) { dc_path(@dc, l) }
     @og = @dc if @dc.photo_key
     @ld = dc_json_ld(@dc)
+    @status = status_report(only: @dc.id)&.sites&.first
     cache_control :public, max_age: 60
     erb :dc
+  end
+
+  # Reachability from asxpio's monitor; not incidents (see Bingo::Status).
+  get %r{/(ru|en|uk)/status} do |locale|
+    @locale = locale
+    @report = status_report
+    @title = t(:status_title)
+    @desc = snippet(t(:status_lead))
+    @path_for = ->(l) { "/#{l}/status" }
+    cache_control :public, max_age: 60
+    erb :status
+  end
+
+  get '/status.json' do
+    content_type 'application/json', charset: 'utf-8'
+    headers 'Access-Control-Allow-Origin' => '*'
+    cache_control :public, max_age: 60
+    JSON.pretty_generate(status_json(status_report))
   end
 
   # Incident feeds per locale: RSS 2.0 and JSON Feed 1.1, newest first.

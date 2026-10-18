@@ -15,6 +15,13 @@
     <%== erb :_dc_meta, layout: false, locals: { dc: dc } %>
     <p class="facts"><%= dc_facts(dc).join(' ') %></p>
     <% dc.about(@locale).each do |para| %><p class="facts"><%= para %></p><% end %>
+    <% if @status %>
+      <section>
+        <h2><%= t(:status_dc) %></h2>
+        <p><span class="st <%= @status.state %>"><%= t(:status_states)[@status.state] %></span> · <a href="/<%= @locale %>/status"><%= t(:status_link) %></a></p>
+        <%== erb :_status_bars, layout: false, locals: { history: @status.history } %>
+      </section>
+    <% end %>
     <section>
       <h2><%= t(:incidents) %></h2>
       <%== erb :_dc_incidents, layout: false, locals: { dc: dc } %>

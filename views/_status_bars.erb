@@ -1,0 +1,3 @@
+<div class="bars" role="img" aria-label="<%= t(:status_cols)['hours'] %>">
+  <% history.each_with_index do |a, i| %><i class="<%= avail_class(a) %>" title="<%= format(t(:status_hour), h: history.size - i, p: a ? "#{(a * 100).round}%" : t(:status_states)['unknown']) %>"></i><% end %>
+</div>

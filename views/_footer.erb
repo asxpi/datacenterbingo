@@ -2,6 +2,6 @@
   <p><%= t(:footer) %></p>
   <p class="credits"><%= t(:credits_ai) %>
     <%== format(Rack::Utils.escape_html(t(:credits_hym)), link: '<a href="https://hackyourmom.com/en/karta-data-czentriv-na-rasii/" target="_blank" rel="noopener">hackyourmom</a>') %></p>
-  <p><a href="/<%= @locale %>/feed.xml">RSS</a> · <a href="/<%= @locale %>/feed.json">JSON Feed</a> · <a href="/data.json"><%= t(:open_data) %></a></p>
+  <p><a href="/<%= @locale %>/feed.xml">RSS</a> · <a href="/<%= @locale %>/feed.json">JSON Feed</a> · <a href="/data.json"><%= t(:open_data) %></a> · <a href="/<%= @locale %>/status"><%= t(:status_link) %></a></p>
   <p>© <%= Date.today.year %> <a href="https://asxp.io">asxp.io</a> · <a href="<%= BingoWeb::SOURCE_URL %>" rel="noopener"><%= t(:source_code) %></a></p>
 </footer>

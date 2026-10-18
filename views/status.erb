@@ -1,0 +1,62 @@
+<% r = @report %>
+<main>
+  <header>
+    <h1><%= t(:status_h1) %> <span><%= t(:status_accent) %></span></h1>
+    <nav class="langs">
+      <% Bingo::LOCALES.each do |l| %>
+        <a href="<%= @path_for.(l) %>" hreflang="<%= l %>" lang="<%= l %>" <%== 'aria-current="page"' if l == @locale %>><%= l %></a>
+      <% end %>
+    </nav>
+  </header>
+  <nav class="crumbs"><a href="/<%= @locale %>"><%= t(:back) %></a></nav>
+
+  <p class="lead"><%= t(:status_lead) %></p>
+  <p class="lead"><%= t(:status_note) %></p>
+
+  <% if r.nil? || r.checked_at.nil? %>
+    <p class="empty"><%= t(:status_never) %></p>
+  <% else %>
+    <% if r.state == 'stale' %><p class="status-banner"><%= t(:status_stale) %></p><% end %>
+    <% if r.state == 'vantage' %><p class="status-banner"><%= t(:status_vantage) %></p><% end %>
+    <p class="meta">
+      <%= format(t(:status_checked), time: r.checked_at.strftime('%d.%m.%Y %H:%M')) %>
+      <% if r.controls && r.controls[1].positive? %><%= format(t(:status_controls), ok: r.controls[0], n: r.controls[1]) %><% end %>
+      <% c = r.counts %>
+      <% %w[up degraded down unknown].each do |s| %><% if c[s] %> <span class="st <%= s %>"><%= t(:status_states)[s] %>: <%= c[s] %></span><% end %><% end %>
+    </p>
+
+    <table class="status-table">
+      <thead>
+        <tr>
+          <th>#</th><th><%= t(:status_cols)['dc'] %></th><th><%= t(:status_cols)['state'] %></th>
+          <th><%= t(:status_cols)['hours'] %></th><th class="num hide-sm"><%= t(:status_cols)['rtt'] %></th>
+          <th class="num hide-sm"><%= t(:status_cols)['targets'] %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% r.sites.each do |s| %>
+          <tr>
+            <td class="num"><%= s.dc.position %></td>
+            <td><a href="<%= dc_path(s.dc) %>"><%= s.dc.l(:name, @locale) %></a><span class="city"><%= s.dc.l(:city, @locale) %> · <%= s.dc.operator %></span></td>
+            <td><span class="st <%= s.state %>"><%= t(:status_states)[s.state] %></span></td>
+            <td><%== erb :_status_bars, layout: false, locals: { history: s.history } %></td>
+            <td class="num hide-sm"><%= s.rtt_ms %></td>
+            <td class="num hide-sm"><%= s.targets %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <% if r && r.unmonitored.any? %>
+    <section>
+      <h2><%= t(:status_unmonitored) %> (<%= r.unmonitored.size %>)</h2>
+      <p class="unmonitored"><%= t(:status_unmonitored_note) %></p>
+      <p class="unmonitored">
+        <% r.unmonitored.each_with_index do |dc, i| %><%= ', ' if i.positive? %><a href="<%= dc_path(dc) %>"><%= dc.l(:name, @locale) %></a><% end %>
+      </p>
+    </section>
+  <% end %>
+
+  <%== erb :_footer, layout: false %>
+</main>

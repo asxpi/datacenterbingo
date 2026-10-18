@@ -46,6 +46,13 @@ renderings only for unbuilt sites) and credit format.
   photo credit and incidents with sources. Licensed CC BY 4.0, with the
   attribution inside the file. Feeds and dataset send
   `Access-Control-Allow-Origin: *`.
+- Reachability: `/:locale/status` and `/status.json` (`Bingo::Status`),
+  plus a block on monitored datacenter pages. They read the
+  `bingo_monitor_*` tables that asxpio's `bin/monitor` writes (TCP probes
+  from Finland, 5-minute buckets, control hosts in Russia). States: up,
+  degraded, down (nothing answered for two buckets), unknown (worker stale,
+  or under half the controls answering). Not incidents: never cross out a
+  cell from this alone.
 - `config.ru`: `www.` → `BINGO_HOST` 301.
 - `views/`: `layout.erb` (CSS and SEO head), `index.erb` (card, provider
   filter, dialogs), `dc.erb`, partials. `assets/`: icons.
