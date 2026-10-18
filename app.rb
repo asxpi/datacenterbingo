@@ -121,7 +121,7 @@ class BingoWeb < Sinatra::Base
       [format(t(:dc_intro), name: dc.l(:name, @locale), city: dc.l(:city, @locale), operator: dc.operator),
        (format(t(:dc_capacity), mw: mw_prose(dc)) if mw(dc)),
        { 'building' => t(:dc_building), 'planned' => t(:dc_planned) }[dc.status] || (dc.year && format(t(:dc_since), dc.year)),
-       format(t(:dc_rank), pos: dc.position)].compact
+       (format(t(:dc_rank), pos: op_rank(dc)) if op_rank(dc))].compact
     end
 
     def dc_latest(dc)
@@ -181,6 +181,41 @@ class BingoWeb < Sinatra::Base
 
     def feed_time(i) = Time.utc(i.occurred_on.year, i.occurred_on.month, i.occurred_on.day)
 
+    # Rank by power among operational datacenters only, the same order as the
+    # default card; nil for sites not yet in service.
+    def op_rank(dc)
+      @op_ranks ||= Bingo::Datacenter.where(status: 'operational').order(:position, :id).select_map(:id)
+                                     .each_with_index.to_h { |id, i| [id, i + 1] }
+      @op_ranks[dc.id]
+    end
+
+    def probe_json(t)
+      { host: t[:host], port: t[:port], label: t[:label], source_url: t[:source_url],
+        answered: t[:last_ok], rtt_ms: t[:last_rtt_ms] }
+    end
+
+    # WebPage + Dataset (status.json), so the page reads as live open data.
+    def status_ld(report)
+      url = "#{base_url}/#{@locale}/status"
+      JSON.generate(
+        '@context' => 'https://schema.org',
+        '@graph' => [
+          { '@type' => 'WebPage', '@id' => url, 'url' => url, 'name' => t(:status_title), 'description' => @desc,
+            'inLanguage' => @locale, 'dateModified' => report&.checked_at&.utc&.iso8601,
+            'isPartOf' => { '@id' => "#{base_url}/#website" },
+            'breadcrumb' => { '@type' => 'BreadcrumbList', 'itemListElement' => [
+              { '@type' => 'ListItem', 'position' => 1, 'name' => t(:title), 'item' => "#{base_url}/#{@locale}" },
+              { '@type' => 'ListItem', 'position' => 2, 'name' => t(:status_link), 'item' => url }
+            ] } }.compact,
+          { '@type' => 'Dataset', 'name' => t(:status_link), 'description' => t(:status_lead), 'url' => url,
+            'license' => LICENSE_URL, 'isAccessibleForFree' => true, 'temporalCoverage' => 'P1D',
+            'creator' => { '@type' => 'Person', 'name' => 'asxpi', 'url' => 'https://asxp.io' },
+            'distribution' => [{ '@type' => 'DataDownload', 'encodingFormat' => 'application/json',
+                                 'contentUrl' => "#{base_url}/status.json" }] }
+        ]
+      ).gsub('</', '<\/')
+    end
+
     # Bar colour for an answered share (nil = no data).
     def avail_class(a)
       return '' if a.nil?
@@ -193,9 +228,11 @@ class BingoWeb < Sinatra::Base
       { checked_at: report&.checked_at&.utc&.iso8601, monitor: report&.state,
         controls: report&.controls && { ok: report.controls[0], checked: report.controls[1] },
         datacenters: (report&.sites || []).map do |s|
-          { slug: s.dc.slug, rank: s.dc.position, state: s.state, availability: s.availability&.round(3),
-            rtt_ms: s.rtt_ms, targets: s.targets, hourly: s.history.map { |a| a&.round(3) } }
+          { slug: s.dc.slug, rank: s.dc.position, operational_rank: op_rank(s.dc), state: s.state,
+            availability: s.availability&.round(3), rtt_ms: s.rtt_ms, hourly: s.history.map { |a| a&.round(3) },
+            targets: s.targets.map { |t| probe_json(t) } }
         end,
+        control_hosts: (report&.control_hosts || []).map { |t| probe_json(t) },
         unmonitored: (report&.unmonitored || []).map(&:slug) }
     end
 
@@ -231,7 +268,8 @@ class BingoWeb < Sinatra::Base
     content_type 'application/xml'
     cache_control :public, max_age: 3600
     dcs = Bingo::Datacenter.order(:position, :id).eager(:incidents).all
-    @entries = [[->(l) { "/#{l}" }, Bingo::Board.load.updated_on, '/']] +
+    @entries = [[->(l) { "/#{l}" }, Bingo::Board.load.updated_on, '/'],
+                [->(l) { "/#{l}/status" }, nil, '/en/status']] +
                dcs.map { |dc| [->(l) { dc_path(dc, l) }, [dc.updated_at, *dc.incidents.map(&:updated_at)].compact.max] }
     erb :sitemap, layout: false
   end
@@ -280,8 +318,10 @@ class BingoWeb < Sinatra::Base
     @locale = locale
     @report = status_report
     @title = t(:status_title)
-    @desc = snippet(t(:status_lead))
+    @desc = t(:status_desc)
     @path_for = ->(l) { "/#{l}/status" }
+    @x_default = '/en/status'
+    @ld = status_ld(@report)
     cache_control :public, max_age: 60
     erb :status
   end
@@ -345,7 +385,7 @@ class BingoWeb < Sinatra::Base
                    'part of the list from the hackyourmom datacenter map (data by Cat Eyes OSINT), re-verified.',
       updated_at: Bingo::Board.load.updated_on&.utc&.iso8601,
       datacenters: dcs.map do |dc|
-        { slug: dc.slug, rank: dc.position, name: loc.(dc, :name), city: loc.(dc, :city),
+        { slug: dc.slug, rank: dc.position, operational_rank: op_rank(dc), name: loc.(dc, :name), city: loc.(dc, :city),
           operator: dc.operator, provider: dc.provider, status: dc.status,
           mw: dc.mw, mw_value: Bingo.mw_value(dc.mw), mw_type: dc.mw_type, year: dc.year,
           info_url: dc.info_url,

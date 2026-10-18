@@ -1,7 +1,7 @@
 <% r = @report %>
 <main>
   <header>
-    <h1><%= t(:status_h1) %> <span><%= t(:status_accent) %></span></h1>
+    <h1><%= t(:status_h1) %> <span><%= t(:status_accent) %></span> <small><%= t(:status_tagline) %></small></h1>
     <nav class="langs">
       <% Bingo::LOCALES.each do |l| %>
         <a href="<%= @path_for.(l) %>" hreflang="<%= l %>" lang="<%= l %>" <%== 'aria-current="page"' if l == @locale %>><%= l %></a>
@@ -24,25 +24,25 @@
       <% c = r.counts %>
       <% %w[up degraded down unknown].each do |s| %><% if c[s] %> <span class="st <%= s %>"><%= t(:status_states)[s] %>: <%= c[s] %></span><% end %><% end %>
     </p>
+    <% if r.control_hosts.any? %><%== erb :_probes, layout: false, locals: { probes: r.control_hosts, title: t(:status_controls_list) } %><% end %>
 
     <table class="status-table">
       <thead>
         <tr>
           <th>#</th><th><%= t(:status_cols)['dc'] %></th><th><%= t(:status_cols)['state'] %></th>
           <th><%= t(:status_cols)['hours'] %></th><th class="num hide-sm"><%= t(:status_cols)['rtt'] %></th>
-          <th class="num hide-sm"><%= t(:status_cols)['targets'] %></th>
         </tr>
       </thead>
       <tbody>
         <% r.sites.each do |s| %>
           <tr>
-            <td class="num"><%= s.dc.position %></td>
+            <td class="num"><%= op_rank(s.dc) %></td>
             <td><a href="<%= dc_path(s.dc) %>"><%= s.dc.l(:name, @locale) %></a><span class="city"><%= s.dc.l(:city, @locale) %> · <%= s.dc.operator %></span></td>
             <td><span class="st <%= s.state %>"><%= t(:status_states)[s.state] %></span></td>
             <td><%== erb :_status_bars, layout: false, locals: { history: s.history } %></td>
             <td class="num hide-sm"><%= s.rtt_ms %></td>
-            <td class="num hide-sm"><%= s.targets %></td>
           </tr>
+          <tr class="probe-row"><td></td><td colspan="4"><%== erb :_probes, layout: false, locals: { probes: s.targets, title: t(:status_probes) } %></td></tr>
         <% end %>
       </tbody>
     </table>

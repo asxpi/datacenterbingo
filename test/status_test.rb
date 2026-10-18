@@ -16,7 +16,10 @@ class StatusTest < Minitest::Test
       Bingo::Datacenter.create(slug: "dc-#{s}", position: i + 1, name_ru: "ЦОД #{s}", city_ru: 'Москва',
                                operator: 'Op', status: 'operational')
     end
-    [@up, @down, @part].each { |dc| @db[:bingo_monitor_targets].insert(datacenter_id: dc.id, host: "h-#{dc.slug}", port: 443, created_at: B) }
+    [@up, @down, @part].each do |dc|
+      @db[:bingo_monitor_targets].insert(datacenter_id: dc.id, host: "h-#{dc.slug}", port: 443, label: "probe #{dc.slug}",
+                                         source_url: 'https://example.com/src', last_ok: true, last_rtt_ms: 40, created_at: B)
+    end
     @db[:bingo_monitor_targets].insert(datacenter_id: nil, host: 'ctl', port: 80, created_at: B)
   end
 
@@ -86,10 +89,24 @@ class StatusTest < Minitest::Test
     data = JSON.parse(last_response.body)
     assert_equal %w[dc-up dc-down dc-part], data['datacenters'].map { |d| d['slug'] }
     assert_equal ['dc-none'], data['unmonitored']
+    assert_equal({ 'host' => 'h-dc-up', 'port' => 443, 'label' => 'probe dc-up', 'source_url' => 'https://example.com/src',
+                   'answered' => true, 'rtt_ms' => 40 }, data['datacenters'][0]['targets'][0])
+    assert_equal ['ctl'], data['control_hosts'].map { |t| t['host'] }
+    get '/ru/status'
+    assert_includes last_response.body, 'h-dc-part:443'
+    assert_includes last_response.body, '"@type":"Dataset"'
     get '/en/dc/dc-up'
     assert_includes last_response.body, 'Network reachability'
     get '/en/dc/dc-none'
     refute_includes last_response.body, 'Network reachability'
+  end
+
+  def test_rank_counts_operational_sites_only
+    @part.update(status: 'building') # position 3 is not in service
+    get '/en/dc/dc-none'                # position 4
+    assert_includes last_response.body, 'No. 3 by power among'
+    get '/en/dc/dc-part'
+    refute_includes last_response.body, 'by power among'
   end
 
   def test_status_page_before_any_round

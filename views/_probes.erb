@@ -1,0 +1,13 @@
+<details class="probes">
+  <summary><%= title %> (<%= probes.size %>)</summary>
+  <ul>
+    <% probes.each do |p| %>
+      <li>
+        <span class="st <%= { true => 'up', false => 'down', nil => 'unknown' }[p[:last_ok]] %>"></span>
+        <code><%= p[:host] %>:<%= p[:port] %></code><% if p[:label] %> — <%= p[:label] %><% end %>
+        <% if p[:last_ok] %> · <%= p[:last_rtt_ms] %> <%= t(:status_cols)['rtt'] %><% elsif p[:last_ok] == false %> · <%= t(:status_no_answer) %><% end %>
+        <% if p[:source_url] %> · <a href="<%= p[:source_url] %>" target="_blank" rel="nofollow noopener"><%= t(:status_source) %></a><% end %>
+      </li>
+    <% end %>
+  </ul>
+</details>

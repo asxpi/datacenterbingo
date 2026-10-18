@@ -20,6 +20,7 @@
         <h2><%= t(:status_dc) %></h2>
         <p><span class="st <%= @status.state %>"><%= t(:status_states)[@status.state] %></span> · <a href="/<%= @locale %>/status"><%= t(:status_link) %></a></p>
         <%== erb :_status_bars, layout: false, locals: { history: @status.history } %>
+        <%== erb :_probes, layout: false, locals: { probes: @status.targets, title: t(:status_probes) } %>
       </section>
     <% end %>
     <section>
@@ -29,8 +30,8 @@
   </article>
 
   <nav class="pager">
-    <% if @prev %><a href="<%= dc_path(@prev) %>" rel="prev">← #<%= @prev.position %> <%= @prev.l(:name, @locale) %></a><% else %><span></span><% end %>
-    <% if @next %><a href="<%= dc_path(@next) %>" rel="next">#<%= @next.position %> <%= @next.l(:name, @locale) %> →</a><% end %>
+    <% if @prev %><a href="<%= dc_path(@prev) %>" rel="prev">← <%= "##{op_rank(@prev)} " if op_rank(@prev) %><%= @prev.l(:name, @locale) %></a><% else %><span></span><% end %>
+    <% if @next %><a href="<%= dc_path(@next) %>" rel="next"><%= "##{op_rank(@next)} " if op_rank(@next) %><%= @next.l(:name, @locale) %> →</a><% end %>
   </nav>
   <p><a href="/<%= @locale %>"><%= t(:back) %></a></p>
 

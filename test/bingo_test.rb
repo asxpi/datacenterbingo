@@ -160,7 +160,8 @@ class BingoTest < Minitest::Test
     %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}</loc>" }
     %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}/dc/dc-25</loc>" }
     assert_includes last_response.body, '<xhtml:link rel="alternate" hreflang="uk" href="https://example.org/uk/dc/dc-7"/>'
-    assert_equal 3, last_response.body.scan('hreflang="x-default"').size # card URLs only
+    %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}/status</loc>" }
+    assert_equal 6, last_response.body.scan('hreflang="x-default"').size # card and status URLs only
     assert_includes last_response.body, 'hreflang="x-default"'
     refute_includes last_response.body, 'changefreq'
     assert_match %r{</loc>\n    <lastmod>\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ</lastmod>\n    <xhtml:link}, last_response.body

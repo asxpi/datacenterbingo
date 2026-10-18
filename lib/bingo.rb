@@ -70,11 +70,11 @@ module Bingo
       dc_intro: '%{name} — дата-центр в городе %{city}, оператор — %{operator}.',
       dc_capacity: 'Мощность: %{mw}.', dc_building: 'Строится.', dc_planned: 'Планируется.',
       dc_since: 'Работает с %d года.',
-      dc_rank: '№ %{pos} по мощности среди крупнейших дата-центров России.',
+      dc_rank: '№ %{pos} по мощности среди действующих крупнейших дата-центров России.',
       dc_latest: 'Последний инцидент (%{date}): %{title}', incidents: 'Инциденты',
       back: '← К карточке', dc_page: 'Страница ЦОДа →',
       status_link: 'Доступность ЦОДов', status_title: 'Доступность ЦОДов России — сетевой мониторинг | Бинго ЦОДов',
-      status_h1: 'Доступность', status_accent: 'ЦОДов',
+      status_h1: 'Доступность', status_accent: 'ЦОДов', status_tagline: 'Сетевые проверки крупнейших дата-центров России раз в минуту',
       status_lead: 'Раз в минуту мы открываем TCP-соединение с публичными адресами, которые открытые источники связывают с конкретной площадкой. Проверка идёт из Финляндии: российская фильтрация и отключения внешних каналов могут выглядеть как авария, поэтому параллельно проверяются контрольные узлы в России.',
       status_note: 'Это не подтверждённые инциденты: клетка на карточке зачёркивается только по публичному источнику.',
       status_states: { 'up' => 'доступен', 'degraded' => 'частично', 'down' => 'не отвечает', 'unknown' => 'нет данных' },
@@ -84,7 +84,9 @@ module Bingo
       status_checked: 'Последняя проверка: %{time} UTC.', status_never: 'Проверок ещё не было.',
       status_unmonitored: 'Без мониторинга', status_unmonitored_note: 'Действующие ЦОДы, для которых нет публичных адресов, надёжно привязанных к площадке (обычно собственные ЦОДы Яндекса, VK, Сбера).',
       status_cols: { 'dc' => 'ЦОД', 'state' => 'Сейчас', 'hours' => '24 часа', 'rtt' => 'мс', 'targets' => 'адр.' },
-      status_dc: 'Доступность сети', status_hour: '%{h} ч назад: %{p}'
+      status_dc: 'Доступность сети', status_hour: '%{h} ч назад: %{p}',
+      status_desc: 'Доступность крупнейших дата-центров России онлайн: ежеминутные сетевые проверки IXcellerate, Selectel, DataPro, Key Point и других, история за 24 часа и открытые данные.',
+      status_probes: 'Что проверяем', status_controls_list: 'Контрольные узлы в России', status_no_answer: 'не отвечает', status_source: 'почему этот адрес'
     },
     'en' => {
       seo_title: 'Datacenter Bingo — strikes, fires and outages at Russian datacenters',
@@ -114,11 +116,11 @@ module Bingo
       dc_intro: '%{name} is a datacenter in %{city} operated by %{operator}.',
       dc_capacity: 'Capacity: %{mw}.', dc_building: 'Under construction.', dc_planned: 'Planned.',
       dc_since: 'In service since %d.',
-      dc_rank: "No. %{pos} by power among Russia's largest datacenters.",
+      dc_rank: "No. %{pos} by power among Russia's largest operational datacenters.",
       dc_latest: 'Latest reported incident (%{date}): %{title}', incidents: 'Incidents',
       back: '← Back to the card', dc_page: 'Datacenter page →',
       status_link: 'Datacenter reachability', status_title: "Russian datacenter reachability — network monitor | Datacenter Bingo",
-      status_h1: 'Datacenter', status_accent: 'reachability',
+      status_h1: 'Datacenter', status_accent: 'reachability', status_tagline: "Minute-by-minute network checks of Russia's largest datacenters",
       status_lead: 'Once a minute we open a TCP connection to public addresses that open sources tie to a specific site. Probes run from Finland: Russian filtering and cuts to international links can look like an outage, so control hosts inside Russia are checked alongside.',
       status_note: 'These are not confirmed incidents: a cell on the card is crossed out only on a public source.',
       status_states: { 'up' => 'reachable', 'degraded' => 'partial', 'down' => 'not answering', 'unknown' => 'no data' },
@@ -128,7 +130,9 @@ module Bingo
       status_checked: 'Last check: %{time} UTC.', status_never: 'No checks yet.',
       status_unmonitored: 'Not monitored', status_unmonitored_note: 'Operational datacenters with no public address reliably tied to the site (mostly Yandex, VK and Sber in-house sites).',
       status_cols: { 'dc' => 'Datacenter', 'state' => 'Now', 'hours' => '24 hours', 'rtt' => 'ms', 'targets' => 'addr.' },
-      status_dc: 'Network reachability', status_hour: '%{h} h ago: %{p}'
+      status_dc: 'Network reachability', status_hour: '%{h} h ago: %{p}',
+      status_desc: "Live reachability of Russia's largest datacenters: minute-by-minute network checks of IXcellerate, Selectel, DataPro, Key Point and others, 24-hour history and open data.",
+      status_probes: 'What we check', status_controls_list: 'Control hosts in Russia', status_no_answer: 'no answer', status_source: 'why this address'
     },
     'uk' => {
       seo_title: 'Бінго ЦОДів — атаки, пожежі та аварії дата-центрів Росії',
@@ -158,11 +162,11 @@ module Bingo
       dc_intro: '%{name} — дата-центр у місті %{city}, оператор — %{operator}.',
       dc_capacity: 'Потужність: %{mw}.', dc_building: 'Будується.', dc_planned: 'Планується.',
       dc_since: 'Працює з %d року.',
-      dc_rank: '№ %{pos} за потужністю серед найбільших дата-центрів Росії.',
+      dc_rank: '№ %{pos} за потужністю серед найбільших діючих дата-центрів Росії.',
       dc_latest: 'Останній інцидент (%{date}): %{title}', incidents: 'Інциденти',
       back: '← До картки', dc_page: 'Сторінка ЦОДу →',
       status_link: 'Доступність ЦОДів', status_title: 'Доступність ЦОДів Росії — мережевий моніторинг | Бінго ЦОДів',
-      status_h1: 'Доступність', status_accent: 'ЦОДів',
+      status_h1: 'Доступність', status_accent: 'ЦОДів', status_tagline: 'Мережеві перевірки найбільших дата-центрів Росії щохвилини',
       status_lead: 'Раз на хвилину ми відкриваємо TCP-з’єднання з публічними адресами, які відкриті джерела пов’язують із конкретним майданчиком. Перевірка йде з Фінляндії: російська фільтрація та відключення зовнішніх каналів можуть виглядати як аварія, тому паралельно перевіряються контрольні вузли в Росії.',
       status_note: 'Це не підтверджені інциденти: клітинка на картці закреслюється лише за публічним джерелом.',
       status_states: { 'up' => 'доступний', 'degraded' => 'частково', 'down' => 'не відповідає', 'unknown' => 'немає даних' },
@@ -172,7 +176,9 @@ module Bingo
       status_checked: 'Остання перевірка: %{time} UTC.', status_never: 'Перевірок ще не було.',
       status_unmonitored: 'Без моніторингу', status_unmonitored_note: 'Діючі ЦОДи, для яких немає публічних адрес, надійно прив’язаних до майданчика (здебільшого власні ЦОДи Яндекса, VK, Сбера).',
       status_cols: { 'dc' => 'ЦОД', 'state' => 'Зараз', 'hours' => '24 години', 'rtt' => 'мс', 'targets' => 'адр.' },
-      status_dc: 'Доступність мережі', status_hour: '%{h} год тому: %{p}'
+      status_dc: 'Доступність мережі', status_hour: '%{h} год тому: %{p}',
+      status_desc: 'Доступність найбільших дата-центрів Росії онлайн: щохвилинні мережеві перевірки IXcellerate, Selectel, DataPro, Key Point та інших, історія за 24 години та відкриті дані.',
+      status_probes: 'Що перевіряємо', status_controls_list: 'Контрольні вузли в Росії', status_no_answer: 'не відповідає', status_source: 'чому ця адреса'
     }
   }.freeze
 
@@ -313,8 +319,10 @@ module Bingo
     STALE  = 900  # newest worker bucket older than this: nothing is current
     HOURS  = 24
 
+    # targets / control_hosts: the probed hosts (endpoint, label, source and
+    # last result), shown so readers can see and check what is measured.
     Site = Struct.new(:dc, :state, :availability, :rtt_ms, :history, :targets)
-    Report = Struct.new(:sites, :unmonitored, :checked_at, :controls, :state) do
+    Report = Struct.new(:sites, :unmonitored, :checked_at, :controls, :state, :control_hosts) do
       def counts = sites.map(&:state).tally
     end
 
@@ -355,11 +363,14 @@ module Bingo
       bad_hours = buckets.reject { |b| vantage_ok?(b) }.map { |b| hour_index(b[:bucket_at], now, hours) }.to_set
 
       samples = db[:bingo_monitor_samples].where { bucket_at >= since }
-      targets = db[:bingo_monitor_targets].where(active: true).exclude(datacenter_id: nil)
+      targets = db[:bingo_monitor_targets].where(active: true)
+                                          .select(:datacenter_id, :host, :port, :label, :source_url, :last_ok, :last_rtt_ms)
+                                          .order(:host, :port)
       dcs = Datacenter.order(:position, :id)
-      samples, targets, dcs = [samples.where(datacenter_id: only), targets.where(datacenter_id: only), dcs.where(id: only)] if only
+      samples, targets, dcs = [samples.where(datacenter_id: only), targets.where(datacenter_id: [only, nil]), dcs.where(id: only)] if only
       samples = samples.all.group_by { |r| r[:datacenter_id] }
-      targets = targets.group_and_count(:datacenter_id).to_hash(:datacenter_id, :count)
+      targets = targets.all.group_by { |r| r[:datacenter_id] }
+      controls = targets.delete(nil) || []
       dcs = dcs.all
       monitored, unmonitored = dcs.partition { |dc| targets.key?(dc.id) }
 
@@ -373,7 +384,7 @@ module Bingo
       end
       Report.new(sites, unmonitored.select(&:operational?), latest && latest[:bucket_at],
                  latest && [latest[:control_ok], latest[:control_checks]],
-                 !fresh ? 'stale' : (trusted ? 'ok' : 'vantage'))
+                 !fresh ? 'stale' : (trusted ? 'ok' : 'vantage'), controls)
     end
 
     def hour_index(time, now, hours) = hours - 1 - ((now - time) / 3600).floor

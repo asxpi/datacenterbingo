@@ -168,6 +168,13 @@
   .bars i.down { background: var(--hit); }
   .status-banner { padding: 10px 14px; border-radius: 8px; background: var(--hit-bg); margin: 0 0 16px; max-width: 65ch; }
   .unmonitored { color: var(--muted); font-size: 13px; max-width: 75ch; }
+  .probes { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
+  .probes summary { cursor: pointer; width: max-content; }
+  .probes ul { list-style: none; margin: 6px 0 0; padding: 0; }
+  .probes li { margin: 2px 0; overflow-wrap: anywhere; }
+  .probes code { color: var(--ink); }
+  .status-table .probe-row td { border-top: 0; padding-top: 0; }
+  .status-table tr:has(+ .probe-row) td { border-bottom: 0; padding-bottom: 2px; }
   footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
   footer p { margin: 0 0 4px; }
   @media (max-width: 560px) {
