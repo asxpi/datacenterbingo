@@ -29,6 +29,8 @@ class StatusTest < Minitest::Test
   end
 
   def two_buckets(base = B, **controls)
+    bucket(base - 3600, **controls) # the dark site answered an hour earlier
+    sample(@down, base - 3600, 5)
     [base - 300, base].each do |at|
       bucket(at, **controls)
       sample(@up, at, 5)
@@ -46,6 +48,11 @@ class StatusTest < Minitest::Test
     assert_equal ['dc-none'], r.unmonitored.map(&:slug)
     assert_equal 40, r.sites.first.rtt_ms
     assert_equal 'ok', r.state
+  end
+
+  def test_target_that_never_answered_is_unknown_not_down
+    [B - 300, B].each { |at| bucket(at); sample(@down, at, 0) }
+    assert_equal 'unknown', states(Bingo::Status.load(NOW))['dc-down']
   end
 
   def test_one_dark_bucket_after_a_good_one_is_not_yet_down

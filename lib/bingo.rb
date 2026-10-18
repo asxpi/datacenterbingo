@@ -329,11 +329,14 @@ module Bingo
     end
 
     # state: up (≥80 % of probes answered), degraded, down (nothing answered
-    # in the last two buckets), unknown (worker stale, vantage lost, or the
-    # site wasn't probed in the newest bucket).
+    # in the last two buckets), unknown (worker stale, vantage lost, the
+    # site wasn't probed in the newest bucket, or its targets never answered
+    # in the window: a host that is filtered from abroad would otherwise
+    # read as a dark site).
     def site_state(rows, latest, previous, trusted)
       return 'unknown' unless latest && trusted
       cur = rows[latest] or return 'unknown'
+      return 'unknown' if rows.each_value.sum { |r| r[:ok] }.zero?
       prev = previous && rows[previous]
       return 'down' if cur[:ok].zero? && (prev.nil? || prev[:ok].zero?)
       cur[:ok] >= cur[:checks] * 0.8 ? 'up' : 'degraded'
