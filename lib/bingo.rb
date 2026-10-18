@@ -24,7 +24,7 @@ module Bingo
     'megafon' => %w[МегаФон MegaFon МегаФон], 'datahouse' => %w[DataHouse] * 3, 'oxygen' => %w[OXYGEN] * 3,
     'linx' => %w[Linx] * 3, 'cloudx' => ['Cloud X'] * 3, 'nkgroup' => ['NK Group'] * 3, 'goznak' => %w[Гознак Goznak Гознак],
     'dataspace' => %w[DataSpace] * 3, 'cloudru' => %w[Cloud.ru] * 3, 'x5' => ['X5 Group'] * 3, 'krok' => %w[КРОК CROC КРОК],
-    'stack' => ['Stack Group'] * 3, 'beeline' => %w[Билайн Beeline Білайн]
+    'stack' => ['Stack Group'] * 3, 'beeline' => %w[Билайн Beeline Білайн], 'vk' => %w[VK] * 3
   }.transform_values { |names| %w[ru en uk].zip(names).to_h }.freeze
 
   def self.provider_name(slug, locale) = PROVIDERS.dig(slug, locale) || slug
