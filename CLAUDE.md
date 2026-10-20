@@ -53,6 +53,9 @@ renderings only for unbuilt sites) and credit format.
   degraded, down (nothing answered for two buckets), unknown (worker stale,
   or under half the controls answering). Not incidents: never cross out a
   cell from this alone.
+- `/:locale/policy`: the no-unsolicited-messages policy, also in
+  `README.md`. Blocklists (SURBL) require a published one to delist; keep
+  both copies in step.
 - `config.ru`: `www.` → `BINGO_HOST` 301.
 - `views/`: `layout.erb` (CSS and SEO head), `index.erb` (card, provider
   filter, dialogs), `dc.erb`, partials. `assets/`: icons.

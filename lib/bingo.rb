@@ -86,7 +86,12 @@ module Bingo
       status_cols: { 'dc' => 'ЦОД', 'state' => 'Сейчас', 'hours' => '24 часа', 'rtt' => 'мс', 'targets' => 'адр.' },
       status_dc: 'Доступность сети', status_hour: '%{h} ч назад: %{p}',
       status_desc: 'Доступность крупнейших дата-центров России онлайн: ежеминутные сетевые проверки IXcellerate, Selectel, DataPro, Key Point и других, история за 24 часа и открытые данные.',
-      status_probes: 'Что проверяем', status_controls_list: 'Контрольные узлы в России', status_no_answer: 'не отвечает', status_source: 'почему этот адрес'
+      status_probes: 'Что проверяем', status_controls_list: 'Контрольные узлы в России', status_no_answer: 'не отвечает', status_source: 'почему этот адрес',
+      policy_link: 'Без спама', policy_title: 'Без нежелательных рассылок | Бинго ЦОДов',
+      policy_desc: 'Бинго ЦОДов никогда не рекламируется нежелательными сообщениями. Сайт не отправляет писем и не ведёт рассылок.',
+      policy_text: ['datacenterbingo.xyz никогда не рекламируется нежелательными письмами, SMS, сообщениями в мессенджерах, на форумах или в соцсетях. Ни мы, ни кто-либо другой не вправе продвигать сайт таким образом.',
+                    'Сайт не отправляет писем, у него нет рассылок, подписок и форм обратной связи. На нём нет рекламы, партнёрских программ и платного продвижения.',
+                    'Если вы получили сообщение со ссылкой на этот сайт, его отправили не мы. Пожалуйста, сообщите о нём через %{link}.']
     },
     'en' => {
       seo_title: 'Datacenter Bingo — strikes, fires and outages at Russian datacenters',
@@ -132,7 +137,12 @@ module Bingo
       status_cols: { 'dc' => 'Datacenter', 'state' => 'Now', 'hours' => '24 hours', 'rtt' => 'ms', 'targets' => 'addr.' },
       status_dc: 'Network reachability', status_hour: '%{h} h ago: %{p}',
       status_desc: "Live reachability of Russia's largest datacenters: minute-by-minute network checks of IXcellerate, Selectel, DataPro, Key Point and others, 24-hour history and open data.",
-      status_probes: 'What we check', status_controls_list: 'Control hosts in Russia', status_no_answer: 'no answer', status_source: 'why this address'
+      status_probes: 'What we check', status_controls_list: 'Control hosts in Russia', status_no_answer: 'no answer', status_source: 'why this address',
+      policy_link: 'No-spam policy', policy_title: 'No unsolicited messages | Datacenter Bingo',
+      policy_desc: 'Datacenter Bingo is never advertised by unsolicited messages. The site sends no email and runs no mailing list.',
+      policy_text: ['datacenterbingo.xyz is never advertised by unsolicited email, SMS, messenger, forum or social media messages. Neither we nor any third party may promote the site this way.',
+                    'The site sends no email and has no mailing list, newsletter or contact form. It carries no ads, affiliate programs or paid promotion.',
+                    'If you received a message linking to this site, we did not send it. Please report it via %{link}.']
     },
     'uk' => {
       seo_title: 'Бінго ЦОДів — атаки, пожежі та аварії дата-центрів Росії',
@@ -178,7 +188,12 @@ module Bingo
       status_cols: { 'dc' => 'ЦОД', 'state' => 'Зараз', 'hours' => '24 години', 'rtt' => 'мс', 'targets' => 'адр.' },
       status_dc: 'Доступність мережі', status_hour: '%{h} год тому: %{p}',
       status_desc: 'Доступність найбільших дата-центрів Росії онлайн: щохвилинні мережеві перевірки IXcellerate, Selectel, DataPro, Key Point та інших, історія за 24 години та відкриті дані.',
-      status_probes: 'Що перевіряємо', status_controls_list: 'Контрольні вузли в Росії', status_no_answer: 'не відповідає', status_source: 'чому ця адреса'
+      status_probes: 'Що перевіряємо', status_controls_list: 'Контрольні вузли в Росії', status_no_answer: 'не відповідає', status_source: 'чому ця адреса',
+      policy_link: 'Без спаму', policy_title: 'Без небажаних розсилок | Бінго ЦОДів',
+      policy_desc: 'Бінго ЦОДів ніколи не рекламується небажаними повідомленнями. Сайт не надсилає листів і не веде розсилок.',
+      policy_text: ['datacenterbingo.xyz ніколи не рекламується небажаними листами, SMS, повідомленнями в месенджерах, на форумах чи в соцмережах. Ні ми, ні будь-хто інший не має права просувати сайт у такий спосіб.',
+                    'Сайт не надсилає листів, не має розсилок, підписок і форм зворотного зв’язку. На ньому немає реклами, партнерських програм і платного просування.',
+                    'Якщо ви отримали повідомлення з посиланням на цей сайт, його надіслали не ми. Будь ласка, повідомте про нього через %{link}.']
     }
   }.freeze
 

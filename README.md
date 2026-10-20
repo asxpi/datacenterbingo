@@ -22,4 +22,16 @@ of Claude (Anthropic). Part of the list came from the
   Credit "Datacenter Bingo (datacenterbingo.xyz)"; the full attribution
   line is in the file.
 
+## No unsolicited messages
+
+datacenterbingo.xyz is never advertised by unsolicited email, SMS,
+messenger, forum or social media messages. Neither we nor any third party
+may promote the site this way. The site sends no email and has no mailing
+list, newsletter or contact form, and it carries no ads, affiliate programs
+or paid promotion.
+
+If you received a message linking to this site, we did not send it. Please
+report it via [asxp.io/contact](https://asxp.io/contact). The same policy
+is on the site at [/en/policy](https://datacenterbingo.xyz/en/policy).
+
 Development: `nix develop`, then `bin/test`. See `CLAUDE.md`.

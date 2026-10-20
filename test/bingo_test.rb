@@ -150,6 +150,17 @@ class BingoTest < Minitest::Test
     assert_includes last_response.body, 'hackyourmom</a>'
   end
 
+  def test_policy_page_in_every_locale_and_footer
+    { 'en' => 'never advertised', 'ru' => 'никогда не рекламируется', 'uk' => 'ніколи не рекламується' }.each do |l, text|
+      get "/#{l}/policy"
+      assert last_response.ok?
+      assert_includes last_response.body, text
+      assert_includes last_response.body, '<a href="https://asxp.io/contact">asxp.io/contact</a>'
+    end
+    get '/en'
+    assert_includes last_response.body, '<a href="/en/policy">No-spam policy</a>'
+  end
+
   def test_robots_and_sitemap_are_the_bingos_own
     get '/robots.txt'
     assert last_response.ok?
@@ -161,7 +172,8 @@ class BingoTest < Minitest::Test
     %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}/dc/dc-25</loc>" }
     assert_includes last_response.body, '<xhtml:link rel="alternate" hreflang="uk" href="https://example.org/uk/dc/dc-7"/>'
     %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}/status</loc>" }
-    assert_equal 6, last_response.body.scan('hreflang="x-default"').size # card and status URLs only
+    %w[ru en uk].each { |l| assert_includes last_response.body, "<loc>https://example.org/#{l}/policy</loc>" }
+    assert_equal 9, last_response.body.scan('hreflang="x-default"').size # card, status and policy URLs only
     assert_includes last_response.body, 'hreflang="x-default"'
     refute_includes last_response.body, 'changefreq'
     assert_match %r{</loc>\n    <lastmod>\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ</lastmod>\n    <xhtml:link}, last_response.body

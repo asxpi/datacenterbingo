@@ -269,7 +269,8 @@ class BingoWeb < Sinatra::Base
     cache_control :public, max_age: 3600
     dcs = Bingo::Datacenter.order(:position, :id).eager(:incidents).all
     @entries = [[->(l) { "/#{l}" }, Bingo::Board.load.updated_on, '/'],
-                [->(l) { "/#{l}/status" }, nil, '/en/status']] +
+                [->(l) { "/#{l}/status" }, nil, '/en/status'],
+                [->(l) { "/#{l}/policy" }, nil, '/en/policy']] +
                dcs.map { |dc| [->(l) { dc_path(dc, l) }, [dc.updated_at, *dc.incidents.map(&:updated_at)].compact.max] }
     erb :sitemap, layout: false
   end
@@ -324,6 +325,20 @@ class BingoWeb < Sinatra::Base
     @ld = status_ld(@report)
     cache_control :public, max_age: 60
     erb :status
+  end
+
+  # Anti-spam policy; blocklists (SURBL) ask for a published one.
+  get %r{/(ru|en|uk)/policy} do |locale|
+    @locale = locale
+    @title = t(:policy_title)
+    @desc = t(:policy_desc)
+    @path_for = ->(l) { "/#{l}/policy" }
+    @x_default = '/en/policy'
+    url = "#{base_url}/#{locale}/policy"
+    @ld = JSON.generate('@context' => 'https://schema.org', '@type' => 'WebPage', '@id' => url, 'url' => url,
+                        'name' => @title, 'description' => @desc, 'inLanguage' => locale).gsub('</', '<\/')
+    cache_control :public, max_age: 3600
+    erb :policy
   end
 
   get '/status.json' do

@@ -1,0 +1,17 @@
+<main>
+  <header>
+    <h1><%= t(:policy_link) %></h1>
+    <nav class="langs">
+      <% Bingo::LOCALES.each do |l| %>
+        <a href="<%= @path_for.(l) %>" hreflang="<%= l %>" lang="<%= l %>" <%== 'aria-current="page"' if l == @locale %>><%= l %></a>
+      <% end %>
+    </nav>
+  </header>
+  <nav class="crumbs"><a href="/<%= @locale %>"><%= t(:back) %></a></nav>
+
+  <% t(:policy_text).each do |para| %>
+    <p class="lead"><%== format(Rack::Utils.escape_html(para), link: '<a href="https://asxp.io/contact">asxp.io/contact</a>') %></p>
+  <% end %>
+
+  <%== erb :_footer, layout: false %>
+</main>
