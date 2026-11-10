@@ -123,15 +123,30 @@ jobs:
           script: |
             umask 077
             mkdir -p /opt/datacenterbingo
+            # Garage only takes its own key format (id: GK + 24 hex digits,
+            # secret: 64 hex digits). Hash the MinIO-era secrets into it, as
+            # storage's init/garage-bootstrap.sh does; a pair already in
+            # Garage's format is used as it is.
+            garage_key_id() {
+              if printf '%s' "$1" | grep -Eq '^GK[0-9a-f]{24}$'; then printf '%s' "$1"
+              else printf 'GK%s' "$(printf '%s' "$1" | sha256sum | cut -c1-24)"; fi
+            }
+            garage_secret() {
+              if printf '%s' "$1" | grep -Eq '^[0-9a-f]{64}$'; then printf '%s' "$1"
+              else printf '%s' "$1" | sha256sum | cut -c1-64; fi
+            }
+            S3_ACCESS_KEY="$(garage_key_id "${BINGO_S3_ACCESS_KEY}")"
+            S3_SECRET_KEY="$(garage_secret "${BINGO_S3_SECRET_KEY}")"
+
             cat > /opt/datacenterbingo/.env <<EOF
             RACK_ENV=production
             BINGO_HOST=datacenterbingo.xyz
             DATABASE_URL=postgres://bingo:${BINGO_DB_PASSWORD}@postgres:5432/asxpio
-            S3_ENDPOINT=http://minio:9000
+            S3_ENDPOINT=http://garage:3900
             S3_REGION=us-east-1
             S3_BUCKET=datacenterbingo-photos
-            S3_ACCESS_KEY=${BINGO_S3_ACCESS_KEY}
-            S3_SECRET_KEY=${BINGO_S3_SECRET_KEY}
+            S3_ACCESS_KEY=${S3_ACCESS_KEY}
+            S3_SECRET_KEY=${S3_SECRET_KEY}
             INDEXNOW_KEY=${INDEXNOW}
             EOF
             chmod 600 /opt/datacenterbingo/.env
