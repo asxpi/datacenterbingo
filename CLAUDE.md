@@ -20,8 +20,8 @@ Content is edited in the asxp.io admin (`/admin/bingo`, repo `asxpio`:
   admin side (writes, photo upload and resizing, IndexNow pings, ranking,
   seeding, `guess_provider`) stays in asxpio. Keep shared parts in step:
   `PROVIDERS`, `Board`, and model methods.
-- Prod uses a read-only DB role `bingo` (SELECT on the two tables) and a
-  MinIO user limited to `s3:GetObject` on `datacenterbingo-photos`. Both
+- Prod uses a read-only DB role `bingo` (SELECT on the two tables) and an
+  S3 key (Garage) that can only read `datacenterbingo-photos`. Both
   are provisioned by the `storage` repo (`init/`), from the same
   `BINGO_*` secrets set on both repos.
 
@@ -85,5 +85,5 @@ Secrets:
 | `FJ_REGISTRY`, `FJ_USER`, `FJ_TOKEN` | kaniko clone + push (`write:package`, `read:repository`); Forgejo reserves the `FORGEJO_` prefix |
 | `DEPLOY_IP`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` | SSH to prod |
 | `BINGO_DB_PASSWORD` | read-only Postgres role `bingo` |
-| `BINGO_S3_ACCESS_KEY`, `BINGO_S3_SECRET_KEY` | read-only MinIO user |
+| `BINGO_S3_ACCESS_KEY`, `BINGO_S3_SECRET_KEY` | read-only S3 key; the deploy hashes it into Garage's key format, as storage does |
 | `INDEXNOW` | same key as asxpio's `INDEXNOW` (served here, pinged from there) |

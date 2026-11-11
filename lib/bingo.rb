@@ -299,7 +299,7 @@ module Bingo
     end
   end
 
-  # Photos live in the asxpio MinIO bucket under bingo/ (uploaded and resized
+  # Photos live in the datacenterbingo-photos bucket under bingo/ (uploaded and resized
   # by the asxp.io admin) and are proxied here, so the bucket stays private.
   module Photo
     PREFIX  = 'bingo/'.freeze

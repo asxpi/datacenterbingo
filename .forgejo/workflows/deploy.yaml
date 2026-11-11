@@ -105,7 +105,7 @@ jobs:
           SOURCE: "docker-compose.yml"
           TARGET: "/opt/datacenterbingo/"
 
-      # Read-only DB role and MinIO user (see CLAUDE.md); the asxp.io admin
+      # Read-only DB role and S3 key (see CLAUDE.md); the asxp.io admin
       # owns writes. BINGO_HOST also feeds the Traefik rule via compose.
       - name: Deploy .env from secrets
         uses: appleboy/ssh-action@v1.2.3
