@@ -72,7 +72,7 @@ GEM
     rerun (0.14.0)
       listen (~> 3.0)
     rexml (3.4.4)
-    sequel (5.104.0)
+    sequel (5.110.0)
       bigdecimal
     sinatra (4.2.1)
       logger (>= 1.6.0)
