@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 ruby '>= 3.1'
 
 gem 'sinatra',         '~> 4.2'
-gem 'puma',            '~> 6.6'
+gem 'puma',            '~> 8.0'
 gem 'rack',            '~> 3.2'
 gem 'rack-protection', '~> 4.2'
 gem 'rackup',          '~> 2.3'
