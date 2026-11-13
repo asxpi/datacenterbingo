@@ -1,4 +1,4 @@
-FROM ruby:3.4.12-slim-bookworm
+FROM ruby:4.0.9-slim-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -16,7 +16,8 @@ ENV PATH="${GEM_HOME}/bin:${PATH}"
 
 COPY --chown=bingo Gemfile Gemfile.lock* ./
 ENV BUNDLE_FROZEN=true
-RUN bundle install --without development:test
+ENV BUNDLE_WITHOUT=development:test
+RUN bundle install
 
 COPY --chown=bingo . .
 
@@ -29,4 +30,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD ruby -rnet/http -e 'port = ENV.fetch("PUMA_PORT", "3000"); exit(Net::HTTP.get_response(URI("http://127.0.0.1:#{port}/healthz")).code == "200" ? 0 : 1)'
 
-CMD ["sh", "-c", "exec puma -b tcp://0.0.0.0:${PUMA_PORT} -t ${PUMA_THREADS} --preload"]
+CMD ["sh", "-c", "exec bundle exec puma -b tcp://0.0.0.0:${PUMA_PORT} -t ${PUMA_THREADS} --preload"]
