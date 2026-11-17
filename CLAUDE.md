@@ -71,19 +71,21 @@ loads `test/schema.sql`. Run `cp .env.example .env` for a local server
 
 ## Deploy
 
-On push to `main`, `.forgejo/workflows/deploy.yaml` tests, builds with kaniko
-to `$FJ_REGISTRY/$FJ_USER/datacenterbingo`, then over SSH writes
-`/opt/datacenterbingo/{docker-compose.yml,.env}` and runs
-`docker compose up -d`. The container is on the `traefik` and `storage`
-networks, and the Traefik router `datacenterbingo` takes `BINGO_HOST` and
-`www.`.
+`flake.nix` builds the app (`packages.default`: bundlerEnv from
+`Gemfile.lock` and `gemset.nix`) and runs it (`nixosModules.default`,
+`services.datacenterbingo`: Puma as a hardened systemd service) on
+asxpio-services; Traefik on asxpio-ops routes `datacenterbingo.xyz` and
+`www.` there. A push to `main` is picked up by Renovate in asxpi/iac (flake
+input `datacenterbingo`) within about 15 minutes and deployed by comin; CI
+here only tests (`.forgejo/workflows/ci.yaml`: tests, `bin/check-gemset`,
+the package build).
 
-Secrets:
+After changing `Gemfile.lock`: `nix run nixpkgs#bundix` to refresh
+`gemset.nix` (CI fails until they match). Puma starts through the
+bundlerEnv's binstub with `BUNDLE_FORCE_RUBY_PLATFORM` (the lock lists
+precompiled gems for other platforms; Nix builds the source gems).
 
-| Secret | Purpose |
-|---|---|
-| `FJ_REGISTRY`, `FJ_USER`, `FJ_TOKEN` | kaniko clone + push (`write:package`, `read:repository`); Forgejo reserves the `FORGEJO_` prefix |
-| `DEPLOY_IP`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` | SSH to prod |
-| `BINGO_DB_PASSWORD` | read-only Postgres role `bingo` |
-| `BINGO_S3_ACCESS_KEY`, `BINGO_S3_SECRET_KEY` | read-only S3 key; the deploy hashes it into Garage's key format, as storage does |
-| `INDEXNOW` | same key as asxpio's `INDEXNOW` (served here, pinged from there) |
+Settings and secrets live in iac (`nixos/hosts/asxpio-services/apps.nix`,
+sops key `datacenterbingo/env`: `DATABASE_URL` for the read-only role
+`bingo`, the read-only S3 key in Garage's format, `INDEXNOW_KEY`, the same
+key as asxpio's). This repository holds no deploy secrets.
